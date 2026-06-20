@@ -12,6 +12,7 @@ resource "aws_db_instance" "myapp_db" {
   parameter_group_name = "default.mysql8.0"
   vpc_security_group_ids = [aws_security_group.posweb_mydb_2026_sg.id]
   skip_final_snapshot  = true
+  publicly_accessible = true
 }
 
 # O grupo de segurança será criado com as seguintes regras:

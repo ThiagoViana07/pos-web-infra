@@ -7,8 +7,3 @@ variable "aws_region" {
   # default     = "sa-east-1"
 }
 
-# Esta variável armazena o nome do projeto, que será utilizado para identificar os recursos criados na AWS.
-variable "projeto" {
-  description = "Nome do projeto"
-  type        = string
-}
