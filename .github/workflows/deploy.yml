@@ -5,13 +5,26 @@ on:
     branches:
       - main
   workflow_dispatch:
-
 jobs:
   Deploy-MyAPP:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+
+      - name: Corect Permissions
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: |
+            sudo mkdir -p /home/$USER/myapp
+            sudo chown -R $USER:$USER /home/$USER/myapp
+            sudo chmod -R 775 /home/$USER/myapp
+            sudo mkdir -p /var/www/html
+            sudo chown -R $USER:$USER /var/www/html
+            sudo chmod -R 775 /var/www/html
 
       - name: Config BackEnd file
         run: |
