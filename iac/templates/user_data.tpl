@@ -15,6 +15,10 @@ apt -y install \
     default-libmysqlclient-dev \
     nginx
 
+chown -R ubuntu:ubuntu /home/ubuntu/myapp
+chown -R ubuntu:ubuntu /var/www/html
+chmod -R 775 /var/www/html
+
 mkdir /home/ubuntu/myapp
 cd /home/ubuntu/myapp
 python3 -m venv .
