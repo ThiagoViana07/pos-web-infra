@@ -1,18 +1,59 @@
 name: Deploy MyAPP
 run-name: ${{ github.actor }} is deploying MyAPP 🚀
+
 on:
   push:
     branches:
-      - main
+      - main # deploy automático quando main é atualizada
+
   workflow_dispatch:
+    inputs:
+      run_db_script:
+        description: "Executar script SQL no banco de dados?"
+        required: true
+        type: boolean
+        default: false
 
 jobs:
-  Deploy-MyAPP:
+  # ===========================================================================
+  # JOB 1 — Executa o script SQL manualmente (só quando workflow_dispatch
+  # for chamado com run_db_script = true)
+  # ===========================================================================
+  Run-DB-Script:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_db_script == true }}
+
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
 
+      - name: Instala cliente MySQL
+        run: sudo apt-get install -y mysql-client
+
+      - name: Executa db.sql no RDS
+        run: |
+          mysql \
+            -h ${{ secrets.DB_HOST }} \
+            -P 3306 \
+            -u ${{ secrets.DB_USERNAME }} \
+            -p${{ secrets.DB_PASSWORD }} \
+            < db/db.sql
+
+  # ===========================================================================
+  # JOB 2 — Deploy da aplicação (roda em todo push na main
+  # e também quando chamado manualmente)
+  # ===========================================================================
+  Deploy-MyAPP:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # Substitui as variáveis no backend antes de enviar para a EC2
+      # -----------------------------------------------------------------------
       - name: Config BackEnd file
         run: |
           sed -i 's/_USER_/${{ secrets.DB_USERNAME }}/g' backend/myapi.py
@@ -20,6 +61,9 @@ jobs:
           sed -i 's/_HOST_/${{ secrets.DB_HOST }}/g' backend/myapi.py
           sed -i 's/_DBNAME_/${{ secrets.DB_NAME }}/g' backend/myapi.py
 
+      # -----------------------------------------------------------------------
+      # Envia o backend para a EC2
+      # -----------------------------------------------------------------------
       - name: Deploy BackEnd
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -30,10 +74,31 @@ jobs:
           target: "/home/ubuntu/myapp/"
           strip_components: 1
 
+      # -----------------------------------------------------------------------
+      # Reinicia o servidor backend na EC2 após o deploy
+      # -----------------------------------------------------------------------
+      - name: Reinicia servidor backend
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: |
+            cd /home/ubuntu/myapp
+            pkill -f "myapi.py" || true
+            nohup python3 myapi.py > /home/ubuntu/myapp/app.log 2>&1 &
+            echo "Backend reiniciado"
+
+      # -----------------------------------------------------------------------
+      # Substitui o endereço da API no frontend antes de enviar
+      # -----------------------------------------------------------------------
       - name: Config FrontEnd file
         run: |
           sed -i 's/_API_ADDRESS_/${{ secrets.HOST }}/g' frontend/index.html
 
+      # -----------------------------------------------------------------------
+      # Envia o frontend para a EC2
+      # -----------------------------------------------------------------------
       - name: Deploy FrontEnd
         uses: appleboy/scp-action@v0.1.7
         with:
