@@ -18,8 +18,8 @@ provider "aws" {
   # Tags padrão aplicadas a todos os recursos
   default_tags {
     tags = {
-      Projeto       = var.projeto
-      CriadoPor     = "Thiago Viana & Ian Antunes"
+      Projeto       = "Projeto posweb"
+      CriadoPor     = "Thiago Viana - Ian Antunes"
     }
   }
 }
