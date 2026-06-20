@@ -1,3 +1,6 @@
+# Esse arquivo é responsável por criar o banco de dados RDS e o grupo de segurança associado.
+
+# O banco de dados será criado com as seguintes configurações:
 resource "aws_db_instance" "myapp_db" {
   allocated_storage    = 10
   db_name              = "myapp"
@@ -11,6 +14,7 @@ resource "aws_db_instance" "myapp_db" {
   skip_final_snapshot  = true
 }
 
+# O grupo de segurança será criado com as seguintes regras:
 resource "aws_security_group" "posweb_mydb_2026_sg" {
   name        = "posweb_mydb_2026"
   description = "Allow MYDB inbound traffic and all outbound traffic"
@@ -21,6 +25,7 @@ resource "aws_security_group" "posweb_mydb_2026_sg" {
   }
 }
 
+# As regras de entrada e saída do grupo de segurança serão configuradas da seguinte forma:
 resource "aws_vpc_security_group_ingress_rule" "posweb_mydb_2026_allow_mysql" {
   security_group_id = aws_security_group.posweb_mydb_2026_sg.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -29,6 +34,7 @@ resource "aws_vpc_security_group_ingress_rule" "posweb_mydb_2026_allow_mysql" {
   to_port           = 3306
 }
 
+# As regras de saída do grupo de segurança serão configuradas para permitir todo o tráfego IPv4:
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_mydb" {
   security_group_id = aws_security_group.posweb_mydb_2026_sg.id
   cidr_ipv4         = "0.0.0.0/0"

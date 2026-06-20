@@ -1,4 +1,6 @@
 # Este arquivo declara as versões requeridas do Terraform e dos provedores
+
+# Especifica a versão mínima do Terraform e a versão do provedor AWS necessária para este projeto.
 terraform {
     required_version = ">= 1.14.3"
     required_providers {
@@ -9,6 +11,7 @@ terraform {
     }
 }
 
+# Configuração do provedor AWS
 provider "aws" {
   region = var.aws_region
 
