@@ -20,7 +20,7 @@ resource "aws_instance" "web" {
   key_name = "posweb-myapp-2026"
   security_groups = ["posweb_myapp_2026"]
   user_data = base64encode(data.template_file.user_data.rendered)
-
+  region = "us-east-1"
   tags = {
     Name = "HelloWorld2"
   }
